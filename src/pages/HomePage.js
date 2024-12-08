@@ -1,43 +1,40 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import PokemonCard from "../components/PokemonCard";
-import "../App.css";
 
 const HomePage = () => {
   const [pokemonList, setPokemonList] = useState([]);
-  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Obtén la lista de Pokémon desde la API
     axios
       .get("https://pokeapi.co/api/v2/pokemon?limit=20&offset=0")
-      .then((response) => setPokemonList(response.data.results))
-      .catch((error) => console.error(error));
+      .then((response) => {
+        const results = response.data.results;
+
+        // Agrega las imágenes a cada Pokémon
+        const detailedResults = results.map((pokemon, index) => ({
+          ...pokemon,
+          image: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${index + 1}.png`,
+        }));
+
+        setPokemonList(detailedResults);
+        setLoading(false);
+      })
+      .catch((error) => console.error("Error fetching Pokémon:", error));
   }, []);
 
-  const filteredPokemon = pokemonList.filter((pokemon) =>
-    pokemon.name.toLowerCase().includes(search.toLowerCase())
-  );
+  if (loading) {
+    return <p>Loading Pokémon...</p>;
+  }
 
   return (
     <div>
-      <input
-        type="text"
-        placeholder="Search Pokémon"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        style={{
-          width: "90%",
-          maxWidth: "600px",
-          padding: "10px",
-          margin: "20px auto",
-          display: "block",
-          border: "1px solid #ddd",
-          borderRadius: "5px",
-        }}
-      />
-      <div className="pokemon-list">
-        {filteredPokemon.map((pokemon, index) => (
-          <PokemonCard key={index} pokemon={pokemon} />
+      <h1>Pokémon List</h1>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+        {pokemonList.map((pokemon) => (
+          <PokemonCard key={pokemon.name} pokemon={pokemon} />
         ))}
       </div>
     </div>
